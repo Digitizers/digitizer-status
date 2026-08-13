@@ -11,39 +11,46 @@ domain and covered by the Digitizer GTM container.
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | The entire page: GTM snippet, page styling, and the Robotalp iframe. |
-| `_headers` | Response headers applied by Cloudflare Pages. |
+| `public/index.html` | The entire page: GTM snippet, page styling, and the Robotalp iframe. |
+| `public/_headers` | Response headers applied by Cloudflare to every path. |
+| `wrangler.jsonc` | Deploy config: which directory to publish, and under what Worker name. |
 
 That is the whole project. There is no build step, no dependencies, no
 package manager, and no server-side code.
 
 ## Hosting
 
-Cloudflare Pages, connected to this repo:
+Cloudflare Workers, static assets only, deployed from this repo by Workers
+Builds. `wrangler.jsonc` declares an `assets.directory` and no `main`, which
+is what makes it a static site rather than a Worker script.
 
+- Worker name: `digitizer-status`
 - Production branch: `main`
-- Framework preset: **None**
-- Build command: *(empty)*
-- Output directory: `/`
+- Published directory: `./public`
 - Custom domain: `status.digitizer.dev`
 
-Every push to `main` deploys. Pull requests get a preview deployment.
+Every push to `main` deploys. Pull requests get a preview build.
+
+**Only what is inside `public/` is served.** Files at the repo root — this
+README, `wrangler.jsonc` — are not uploaded and are not reachable over HTTP.
+Anything new that has to be public, including `robots.txt` or a favicon, goes
+in `public/`.
 
 GitHub Pages is intentionally **not** used — it was disabled once Cloudflare
-Pages took over, to avoid a second copy of the page at
+took over, to avoid a second copy of the page at
 `digitizers.github.io/digitizer-status/`.
 
 ## Local preview
 
-Open `index.html` in a browser, or serve the directory over HTTP so the
-iframe and GTM behave as they do in production:
+Open `public/index.html` in a browser, or serve that directory over HTTP so
+the iframe and GTM behave as they do in production:
 
 ```sh
-python3 -m http.server 8000
+python3 -m http.server 8000 --directory public
 # then open http://localhost:8000
 ```
 
-`_headers` is a Cloudflare Pages feature and has no effect locally.
+`public/_headers` is a Cloudflare feature and has no effect locally.
 
 ## Things worth knowing before changing this
 
@@ -55,10 +62,10 @@ python3 -m http.server 8000
   changes its domain, or starts sending `X-Frame-Options` / a
   `frame-ancestors` CSP that excludes us, this page breaks and nothing in this
   repo can fix it. Check Robotalp first when the page renders blank.
-- **`index.html` reveals the iframe after a 3-second `setTimeout`.** The iframe
+- **`public/index.html` reveals the iframe after a 3-second `setTimeout`.** The iframe
   starts hidden and zero-sized so that visitors do not watch the Robotalp app
   paint itself in stages. The delay is a fixed guess, not a load signal.
-- **Response headers live in `_headers`, not in the HTML.** HSTS is set at the
+- **Response headers live in `public/_headers`, not in the HTML.** HSTS is set at the
   Cloudflare zone level and is deliberately absent from that file, so it is not
   sent twice.
 - **The GTM container is `GTM-N2RB6P2X`**, the same one used across Digitizer

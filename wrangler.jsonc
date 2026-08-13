@@ -1,0 +1,10 @@
+{
+  // Static-assets-only Worker: no server-side code, no entry script.
+  // Everything under ./public is uploaded and served as-is, including
+  // the _headers file.
+  "name": "digitizer-status",
+  "compatibility_date": "2026-08-13",
+  "assets": {
+    "directory": "./public"
+  }
+}
